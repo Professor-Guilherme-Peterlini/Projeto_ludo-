@@ -1,20 +1,22 @@
-// filepath: /Users/gui/Desktop/Aulas_Senac/ludo_implement.js
-// Jogo básico de Ludo com quatro jogadores e interface simples
+/** @typedef {Object} Piece
+ *  @property {number} position
+ */
 
-/**
- * @typedef {Object} Player
- * @property {string} name
- * @property {number} position
+/** @typedef {Object} Player
+ *  @property {string} name
+ *  @property {Piece[]} pieces
+ *  @property {boolean} inBase
+ *  @property {number} consecutiveRolls
  */
 
 /** @type {Player} */
-const player1 = { name: "Jogador 1", position: 0 };
+const player1 = { name: "Jogador 1", pieces: [{ position: 0 }, { position: 0 }, { position: 0 }, { position: 0 }], inBase: true, consecutiveRolls: 0 };
 /** @type {Player} */
-const player2 = { name: "Jogador 2", position: 0 };
+const player2 = { name: "Jogador 2", pieces: [{ position: 0 }, { position: 0 }, { position: 0 }, { position: 0 }], inBase: true, consecutiveRolls: 0 };
 /** @type {Player} */
-const player3 = { name: "Jogador 3", position: 0 };
+const player3 = { name: "Jogador 3", pieces: [{ position: 0 }, { position: 0 }, { position: 0 }, { position: 0 }], inBase: true, consecutiveRolls: 0 };
 /** @type {Player} */
-const player4 = { name: "Jogador 4", position: 0 };
+const player4 = { name: "Jogador 4", pieces: [{ position: 0 }, { position: 0 }, { position: 0 }, { position: 0 }], inBase: true, consecutiveRolls: 0 };
 
 /** @type {Player[]} */
 let players = [player1, player2, player3, player4];
@@ -31,14 +33,40 @@ function rollDice() {
   return Math.floor(Math.random() * 6) + 1;
 }
 
-function movePlayer(player) {
+function movePiece(player, pieceIndex) {
   const dice = rollDice();
-  player.position += dice;
-  if (player.position >= 20) {
-    printToScreen(`${player.name} rolou ${dice} e venceu!`);
+  const piece = player.pieces[pieceIndex];
+
+  if (piece.position === 0 && dice === 6) {
+    // A peça sai da base quando tira 6
+    piece.position = 1;
+    printToScreen(`${player.name} rolou ${dice} e a peça ${pieceIndex + 1} saiu da base para a posição: ${piece.position}`);
+  } else if (piece.position > 0) {
+    // A peça avança normalmente
+    const previousPosition = piece.position;
+    piece.position += dice;
+
+    // Verifica se a nova posição ultrapassou o limite de 20
+    if (piece.position > 20) {
+      piece.position = 20;
+    }
+
+    // Verifica se a nova posição foi ocupada por outra peça
+    const occupiedPlayer = players.find(otherPlayer => otherPlayer !== player && otherPlayer.pieces.some(otherPiece => otherPiece.position === piece.position));
+    if (occupiedPlayer) {
+      // Se a posição já estiver ocupada, a peça do outro jogador volta para a base
+      const otherPiece = occupiedPlayer.pieces.find(p => p.position === piece.position);
+      printToScreen(`${player.name} rolou ${dice} e a peça ${pieceIndex + 1} caiu na posição já ocupada por ${occupiedPlayer.name}'s peça. A peça de ${occupiedPlayer.name} volta para a base.`);
+      otherPiece.position = 0;
+    }
+
+    printToScreen(`${player.name} rolou ${dice} e a peça ${pieceIndex + 1} está na posição: ${piece.position}`);
+  }
+
+  // Verifica se todas as peças do jogador chegaram à posição 20
+  if (player.pieces.every(piece => piece.position === 20)) {
+    printToScreen(`${player.name} venceu! Todas as suas peças chegaram à posição 20!`);
     resetGame();
-  } else {
-    printToScreen(`${player.name} rolou ${dice} e está na posição: ${player.position}`);
   }
 }
 
@@ -47,29 +75,30 @@ function switchPlayer() {
 }
 
 function playTurn() {
-  movePlayer(players[currentPlayerIndex]);
-  switchPlayer();
+  const player = players[currentPlayerIndex];
+
+  // Pergunta ao jogador qual peça ele quer mover (pode ser implementado com uma interface de escolha)
+  const pieceIndex = Math.floor(Math.random() * 4); // Simulando a escolha de uma peça aleatória
+
+  movePiece(player, pieceIndex);
+
+  // Se o jogador rolou 6, ele pode jogar novamente (máximo de 3 vezes)
+  if (players[currentPlayerIndex].consecutiveRolls < 3 && rollDice() === 6) {
+    players[currentPlayerIndex].consecutiveRolls++;
+  } else {
+    players[currentPlayerIndex].consecutiveRolls = 0; // Passa a vez
+    switchPlayer();
+  }
 }
 
 function resetGame() {
-  players.forEach(player => player.position = 0);
+  players.forEach(player => {
+    player.pieces.forEach(piece => piece.position = 0); // Reseta as posições das peças
+    player.consecutiveRolls = 0; // Reseta as jogadas consecutivas
+  });
   currentPlayerIndex = 0;
   printToScreen("Jogo reiniciado!");
 }
 
-// Removendo a simulação automática de 10 rodadas
-// Agora, o jogo é interativo via botão "Jogar Turno"
+// Adiciona o evento ao botão "Jogar Turno"
 document.getElementById("playTurnBtn").addEventListener("click", playTurn);
-
-/*
-Tutorial Passo a Passo:
-
-1. **Definir Jogadores:** Crie quatro jogadores com nome e posição inicial 0.
-2. **Configurar Lista de Jogadores:** Use um array para gerenciar a sequência de turnos.
-3. **Criar Dado:** Implemente a função `rollDice` para gerar números entre 1 e 6.
-4. **Mover Peças:** `movePlayer` move o jogador conforme o valor do dado e verifica a vitória.
-5. **Alternar Turno:** `switchPlayer` passa o turno para o próximo jogador.
-6. **Iniciar o Jogo:** `playTurn` coordena as ações de jogar o dado, mover a peça e trocar o turno.
-7. **Reiniciar o Jogo:** A função `resetGame` redefine o estado do jogo ao fim de uma vitória.
-8. **Testar a Lógica:** O botão "Jogar Turno" permite simular uma rodada por clique.
-*/
