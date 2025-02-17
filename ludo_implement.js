@@ -1,13 +1,31 @@
-// Jogo básico de Ludo com quatro jogadores
+// filepath: /Users/gui/Desktop/Aulas_Senac/ludo_implement.js
+// Jogo básico de Ludo com quatro jogadores e interface simples
 
-// Simulação de dados e movimento básico
+/**
+ * @typedef {Object} Player
+ * @property {string} name
+ * @property {number} position
+ */
+
+/** @type {Player} */
 const player1 = { name: "Jogador 1", position: 0 };
+/** @type {Player} */
 const player2 = { name: "Jogador 2", position: 0 };
+/** @type {Player} */
 const player3 = { name: "Jogador 3", position: 0 };
+/** @type {Player} */
 const player4 = { name: "Jogador 4", position: 0 };
 
+/** @type {Player[]} */
 let players = [player1, player2, player3, player4];
 let currentPlayerIndex = 0;
+
+const outputDiv = document.getElementById("output");
+
+function printToScreen(message) {
+  outputDiv.innerHTML += message + "<br>";
+  outputDiv.scrollTop = outputDiv.scrollHeight;
+}
 
 function rollDice() {
   return Math.floor(Math.random() * 6) + 1;
@@ -15,13 +33,12 @@ function rollDice() {
 
 function movePlayer(player) {
   const dice = rollDice();
-  console.log(`${player.name} rolou: ${dice}`);
   player.position += dice;
   if (player.position >= 20) {
-    console.log(`${player.name} venceu!`);
+    printToScreen(`${player.name} rolou ${dice} e venceu!`);
     resetGame();
   } else {
-    console.log(`${player.name} está na posição: ${player.position}`);
+    printToScreen(`${player.name} rolou ${dice} e está na posição: ${player.position}`);
   }
 }
 
@@ -37,13 +54,12 @@ function playTurn() {
 function resetGame() {
   players.forEach(player => player.position = 0);
   currentPlayerIndex = 0;
-  console.log("Jogo reiniciado!");
+  printToScreen("Jogo reiniciado!");
 }
 
-// Simulação de 10 rodadas
-for (let i = 0; i < 10; i++) {
-  playTurn();
-}
+// Removendo a simulação automática de 10 rodadas
+// Agora, o jogo é interativo via botão "Jogar Turno"
+document.getElementById("playTurnBtn").addEventListener("click", playTurn);
 
 /*
 Tutorial Passo a Passo:
@@ -55,7 +71,5 @@ Tutorial Passo a Passo:
 5. **Alternar Turno:** `switchPlayer` passa o turno para o próximo jogador.
 6. **Iniciar o Jogo:** `playTurn` coordena as ações de jogar o dado, mover a peça e trocar o turno.
 7. **Reiniciar o Jogo:** A função `resetGame` redefine o estado do jogo ao fim de uma vitória.
-8. **Testar a Lógica:** O loop simula 10 rodadas para verificar o funcionamento básico.
-
+8. **Testar a Lógica:** O botão "Jogar Turno" permite simular uma rodada por clique.
 */
-
