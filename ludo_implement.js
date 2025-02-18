@@ -2,19 +2,31 @@
 // Jogo básico de Ludo com quatro jogadores e interface simples
 
 /**
+/**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
+ * /**
  * @typedef {Object} Player
  * @property {string} name
- * @property {number} position
+ * @property {number[]} positions // Agora cada jogador tem 4 posições (uma para cada peça)
  */
 
 /** @type {Player} */
-const player1 = { name: "Jogador 1", position: 0 };
+const player1 = { name: "Jogador 1", positions: [0, 0, 0, 0] };
 /** @type {Player} */
-const player2 = { name: "Jogador 2", position: 0 };
+const player2 = { name: "Jogador 2", positions: [0, 0, 0, 0] };
 /** @type {Player} */
-const player3 = { name: "Jogador 3", position: 0 };
+const player3 = { name: "Jogador 3", positions: [0, 0, 0, 0] };
 /** @type {Player} */
-const player4 = { name: "Jogador 4", position: 0 };
+const player4 = { name: "Jogador 4", positions: [0, 0, 0, 0] };
 
 /** @type {Player[]} */
 let players = [player1, player2, player3, player4];
@@ -31,15 +43,36 @@ function rollDice() {
   return Math.floor(Math.random() * 6) + 1;
 }
 
-function movePlayer(player) {
+function movePlayerPiece(player, pieceIndex) {
   const dice = rollDice();
-  player.position += dice;
-  if (player.position >= 20) {
-    printToScreen(`${player.name} rolou ${dice} e venceu!`);
-    resetGame();
+  
+  // Se a peça ainda está na base (posição 0), precisa de um 6 para sair
+  if (player.positions[pieceIndex] === 0) {
+    if (dice === 6) {
+      player.positions[pieceIndex] = 1; // Vai para a posição 1
+      printToScreen(`${player.name} com a peça ${pieceIndex + 1} rolou ${dice} e saiu da base para a posição 1!`);
+      return false; // Não é considerado vitória ainda, o jogador não avançou para a próxima posição
+    } else {
+      printToScreen(`${player.name} com a peça ${pieceIndex + 1} rolou ${dice}, mas precisa de um 6 para sair da base.`);
+      return false; // O jogador não pode mover a peça ainda
+    }
   } else {
-    printToScreen(`${player.name} rolou ${dice} e está na posição: ${player.position}`);
+    // Se já saiu da base, pode avançar normalmente com qualquer número
+    player.positions[pieceIndex] += dice;
+    if (player.positions[pieceIndex] >= 20) {
+      player.positions[pieceIndex] = 20; // Limita a posição à 20
+      printToScreen(`${player.name} com a peça ${pieceIndex + 1} rolou ${dice} e chegou à posição 20!`);
+      return true; // Retorna true quando a peça chega à posição 20
+    } else {
+      printToScreen(`${player.name} com a peça ${pieceIndex + 1} rolou ${dice} e está na posição: ${player.positions[pieceIndex]}`);
+      return false;
+    }
   }
+}
+
+
+function checkIfPlayerWon(player) {
+  return player.positions.every(position => position === 20); // Verifica se todas as peças do jogador chegaram à posição 20
 }
 
 function switchPlayer() {
@@ -47,12 +80,32 @@ function switchPlayer() {
 }
 
 function playTurn() {
-  movePlayer(players[currentPlayerIndex]);
+  let player = players[currentPlayerIndex];
+  let pieceIndex = 0;
+
+  // Tenta mover a primeira peça que ainda não atingiu a posição 20
+  for (let i = 0; i < player.positions.length; i++) {
+    if (player.positions[i] < 20) {
+      pieceIndex = i;
+      break;
+    }
+  }
+
+  // Move a peça
+  movePlayerPiece(player, pieceIndex);
+
+  // Verifica se o jogador venceu
+  if (checkIfPlayerWon(player)) {
+    printToScreen(`${player.name} venceu o jogo! Todas as peças chegaram à posição 20.`);
+    resetGame();
+    return;
+  }
+
   switchPlayer();
 }
 
 function resetGame() {
-  players.forEach(player => player.position = 0);
+  players.forEach(player => player.positions = [0, 0, 0, 0]);
   currentPlayerIndex = 0;
   printToScreen("Jogo reiniciado!");
 }
@@ -60,6 +113,18 @@ function resetGame() {
 // Removendo a simulação automática de 10 rodadas
 // Agora, o jogo é interativo via botão "Jogar Turno"
 document.getElementById("playTurnBtn").addEventListener("click", playTurn);
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 Tutorial Passo a Passo:
